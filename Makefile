@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-I .
-DEPS = trajectory.hpp
+DEPS = trajectory.cpp
 
 %: %.cpp
 	$(CC) -o $@ $(DEPS) $^ $(CFLAGS)
