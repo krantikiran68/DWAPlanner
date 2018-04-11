@@ -1,5 +1,6 @@
 #include<bits/stdc++.h> 
-#include<trajectory.hpp>
+#include<windowparam.hpp>
+
 using namespace std;
 
 int main()

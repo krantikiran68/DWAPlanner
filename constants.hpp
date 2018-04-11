@@ -9,6 +9,11 @@
 #define omega_reso  0.1 * M_PI / 180.0  
 #define dt  0.1  
 #define predict_time 3.0
+#define x_goal 0.00
+#define y_goal 0.00
+#define velocityWeight 0.33
+#define headingWeight 0.33
+#define obstacleWeight 0.34
 
 struct state
 {
