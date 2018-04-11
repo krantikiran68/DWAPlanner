@@ -1,16 +1,4 @@
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/core/core.hpp"
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/video/tracking.hpp"
-#include <cmath>
-#include <iostream>
-#include <queue>
-#include <string.h>
-#include <iostream>
-#include <stdio.h>
-#include <sstream>
-#include <math.h>
+#include<obstacle_distance.hpp>
 
 using namespace std;
 using namespace cv;
@@ -71,15 +59,4 @@ vector<vector<double> > BFS(Mat img) {
 	waitKey(0);
 
 	return distance;
-}
-
-int main() {
-Mat img = imread("rectangle.jpg",0);
-namedWindow("A",WINDOW_AUTOSIZE);
-vector<vector<double> > distance(img.rows,vector<double>(img.cols));
-distance = BFS(img);
-
-cout << distance[200][1] << endl;
-
-return 0;
 }

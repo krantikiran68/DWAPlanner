@@ -1,6 +1,7 @@
 CC=g++
-CFLAGS=-I .
-DEPS = trajectory.cpp windowparam.cpp
+CFLAGS= -I . `pkg-config --cflags opencv`
+LIBS = `pkg-config --libs opencv`
+DEPS = trajectory.cpp windowparam.cpp obstacle_distance.cpp
 
 %: %.cpp
-	$(CC) -o $@ $(DEPS) $^ $(CFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(DEPS) $^ $(LIBS)
