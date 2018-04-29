@@ -1,10 +1,4 @@
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include <math.h>
-#include <iostream>
-#include <vector>
-#include <bits/stdc++.h>
+#include <config_space.hpp>
 
 using namespace std;
 using namespace cv;
@@ -136,32 +130,4 @@ int IsValid(Mat src_img,int bot_height,int bot_length,Point p,int theta)
 		return 0;
 	}
 	return 1;
-}
-
-int main(int argc,char *argv[])
-{
-	Mat src_img =imread(argv[1]);
-	int bot_height,bot_length;
-	cout<< "Bot dimensions: ";
-	cin>>bot_height>>bot_length;
-	cout << "Enter point  ";
-	Point p;
-	cin>>p.x>>p.y;
-	//int flag=IsValid(src_img,bot_height,bot_length,p);
-	int theta;
-	cout<<"Enter theta ";
-	cin>>theta;
-	int flag=IsValid(src_img,bot_height,bot_length,p,theta);
-	if(flag)
-	{
-		cout<<"Yes\n";
-	}
-	else
-		cout<<"No\n";
-	//if(flag)
-	//imshow("a",config[0]);
-	//imshow("b",config[60]);
-	//waitKey(0);
-	return 0;
-
 }

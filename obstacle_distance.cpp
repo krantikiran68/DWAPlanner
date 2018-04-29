@@ -8,14 +8,8 @@ int isValid(int i,int j,int r,int c) {
 }
 
 vector<vector<double> > BFS(Mat img) {
-	vector<vector<double> > distance(img.rows,vector<double>(img.cols));
-	vector<vector<int> > visited(img.rows,vector<int>(img.cols));
-
-	for(int i = 0;i<img.rows;i++) {
-		for(int j = 0;j<img.cols;j++) {
-			visited[i][j] = 0;
-		}
-	}
+	vector<vector<double> > distance(img.rows,vector<double>(img.cols,0));
+	vector<vector<int> > visited(img.rows,vector<int>(img.cols,0));
 
 	queue<Point> q;
 	Mat visualise = img.clone();
@@ -54,9 +48,6 @@ vector<vector<double> > BFS(Mat img) {
 		}
 			
 	}
-
-	imshow("A",visualise);
-	waitKey(0);
 
 	return distance;
 }

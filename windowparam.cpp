@@ -34,7 +34,7 @@ float heading_cost(state current)
   float dy= y_goal - current.y_pos;
   float dx= x_goal - current.x_pos;
 
-  cost= sqrt(dy*dy +dx*dx);
+  cost= sqrt(dy*dy + dx*dx);
   return cost;
 }
 
@@ -50,53 +50,17 @@ float velocity_cost(float velocity)
 
 //////////////////OBSTACLE COST//////////////////////
 
-float obstacle_cost(state current)
+float obstacle_cost(vector<state> trajectory, vector<vector<double> > &distance)
 {
-  float cost;
-
-  /*
-  Method goes here
-  */
-
+  float min_dist=1e9;
+  for(vector<state>::iterator it=trajectory.begin();it!=trajectory.end();it++)
+  {
+    if(distance[it->y_pos][it->x_pos]<min_dist)
+    {
+      min_dist = distance[it->y_pos][it->x_pos];
+    }
+  }
+  float cost = min_dist==0?FLT_MAX:1/min_dist;
   return cost;
 }
 
-
-//////////OBJECTIVE OPTIMIZATION///////////////////////
-
-state CostOptimize(state current)
-{
-
-  vector <state> trajectory = calc_trajectory(current,current.vel,current.omega);
-
-  float cost,mincost=FLT_MAX;
-
-  state bestState;
-
-  for(int i=0;i<trajectory.size();i++)
-  {
-     cost=0;
-
-      vector <float> DynamicWindow = createDynamicWindow(trajectory[i]);
-
-      for(float velocity=DynamicWindow[0];velocity<=DynamicWindow[1];velocity+=0.01)
-      {
-        for(float omega=DynamicWindow[2];omega<=DynamicWindow[3];omega+= 0.1*M_PI/180.0)
-        {
-          cost= (velocityWeight)*velocity_cost(velocity) + (headingWeight)*heading_cost(trajectory[i]) + (obstacleWeight)*obstacle_cost(trajectory[i]);
-        }
-
-      }
-
-      if(mincost > cost)
-      {
-        mincost=cost;
-        bestState=trajectory[i];
-      }
-
-
-
-  }
-
-  return bestState;
-}
