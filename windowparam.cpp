@@ -19,7 +19,7 @@ vector<float> createDynamicWindow(state currentState)
 
   DynamicWindow[0] = tempMinspeed>min_speed?tempMinspeed:min_speed;
   DynamicWindow[1] = tempMaxspeed<max_speed?tempMaxspeed:max_speed;
-  DynamicWindow[2] = tempMinomega>-1*max_omega?tempMinomega:max_omega;
+  DynamicWindow[2] = tempMinomega>-1*max_omega?tempMinomega:-1*(max_omega);
   DynamicWindow[3] = tempMaxomega<max_omega?tempMaxomega:max_omega;
 
   return DynamicWindow;
@@ -55,12 +55,12 @@ float obstacle_cost(vector<state> trajectory, vector<vector<double> > &distance)
   float min_dist=1e9;
   for(vector<state>::iterator it=trajectory.begin();it!=trajectory.end();it++)
   {
-    if(distance[it->y_pos][it->x_pos]<min_dist)
+    if(distance[(int)(it->y_pos)][(int)(it->x_pos)]<min_dist)
     {
-      min_dist = distance[it->y_pos][it->x_pos];
+      min_dist = distance[(int)(it->y_pos)][(int)(it->x_pos)];
     }
   }
-  float cost = min_dist==0?FLT_MAX:1/min_dist;
+  float cost = min_dist==0?FLT_MAX:10/min_dist;
   return cost;
 }
 
