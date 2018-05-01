@@ -60,7 +60,7 @@ float obstacle_cost(vector<state> trajectory, vector<vector<double> > &distance)
       min_dist = distance[(int)(it->y_pos)][(int)(it->x_pos)];
     }
   }
-  float cost = min_dist==0?FLT_MAX:10/min_dist;
+  float cost = min_dist<=0?FLT_MAX:10/min_dist;
   return cost;
 }
 
