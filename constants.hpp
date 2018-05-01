@@ -8,11 +8,11 @@
 #define vel_reso  0.01  
 #define omega_reso  0.1 * M_PI / 180.0    
 #define predict_time 2.0
-#define x_goal 361
-#define y_goal 19
+#define x_goal 15
+#define y_goal 15
 #define velocityWeight 0.33
-#define headingWeight 0.33
-#define obstacleWeight 0.34
+#define headingWeight 0.34
+#define obstacleWeight 0.33
 #define dt 0.1
 
 struct state
