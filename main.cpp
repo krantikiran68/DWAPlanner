@@ -17,8 +17,9 @@ vector<float> path_find(state x, vector<vector<double> > distance)
             
             float head_cost = (headingWeight) * heading_cost(trajectory.back());
             float vel_cost = (velocityWeight) * velocity_cost((trajectory.back()).vel);
-            float obj_cost = (obstacleWeight) * obstacle_cost(trajectory, distance);
+            //float obj_cost = (obstacleWeight) * obstacle_cost(trajectory, distance);
 
+            //cout << head_cost << " " << vel_cost << endl;
             float temp_cost = head_cost + vel_cost;
              
             if(temp_cost<min_cost)
@@ -29,7 +30,7 @@ vector<float> path_find(state x, vector<vector<double> > distance)
             }
         }
     }
-    cout << "T" << endl;
+    //cout << "T" << endl;
     vector<float> vel_ome(2);
     vel_ome[0] = best_vel;
     vel_ome[1] = best_ome;
@@ -39,7 +40,7 @@ vector<float> path_find(state x, vector<vector<double> > distance)
 int main()
 {
     state current;
-    Mat A = imread("b.png",1);
+    Mat A = imread("a.png");
     cout << A.rows << endl << A.cols << endl;
     // for(int i=0;i<A.rows;i++)
     // {
@@ -85,7 +86,7 @@ int main()
     vector<state> path;
     path.push_back(current);
     int i = 0;
-    while(i++ < 1000)
+    while(1)
     {
         float dis = sqrt((pow(current.x_pos-x_goal,2) + pow(current.y_pos-y_goal,2)));
         if(dis <= 1.0)break;
@@ -96,7 +97,7 @@ int main()
     }
     for(vector<state>::iterator it=path.begin();it!=path.end();it++)
     {
-        //cout<<it->y_pos<<" "<<it->x_pos<<endl;
+        cout<<it->x_pos<<" "<<it->y_pos<<endl;
     }
     imshow("A",A);
     waitKey(0);
