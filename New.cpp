@@ -4,19 +4,17 @@
 float max_speed = 1.0  ;
 float min_speed = -1.0  ;
 float max_omega = 40.0 * M_PI / 180.0  ;
-float max_accel = 0.2  ;
+float max_accel = 0.3  ;
 float max_domega = 40.0 * M_PI / 180.0  ;
-float vel_reso = 0.005  ;
+float vel_reso = 0.05  ;
 float omega_reso = 0.1 * M_PI / 180.0    ;
-float predict_time = 2.0;
+float predict_time = 12;
 float x_goal = 361 ;
 float y_goal = 19;
-float velocityWeight = 0.33;
-float headingWeight = 0.33;
-float obstacleWeight = 0.34;
-float dt = 0.1;
+float dt = 0.6;
 float goal_res = 1;
-float inflt_radi = 9;
+float inflt_radi = 3;
+float cons_rad = 8;
 float init_dist;
 
 using namespace std;
@@ -27,6 +25,11 @@ struct state
     float x_pos, y_pos, theta, vel, omega;
 };
 
+float distance(float x1, float y1, float x2, float y2)
+{
+    return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+}
+
 state motion(state temp, float velocity, float omega)
 {
     state curent;
@@ -35,6 +38,10 @@ state motion(state temp, float velocity, float omega)
     curent.theta = temp.theta + omega*dt;
     curent.vel = velocity;
     curent.omega = omega;
+
+    if(curent.theta < -1*M_PI)curent.theta+=2*M_PI;
+
+    if(curent.theta > M_PI)curent.theta-=2*M_PI;
 
     return curent;
 }
@@ -54,10 +61,17 @@ float obstacle_cost(vector<state> trajectory, vector< vector<double> > &distance
 
 float heading_cost(state current)
 {
-    float x_he = (current.x_pos - x_goal);
-    float y_he = (current.y_pos - y_goal);
-    float dist = sqrt(x_he * x_he + y_he * y_he);
-    return dist/(init_dist);
+    float theta = atan2(y_goal - current.y_pos,x_goal - current.x_pos);
+    return abs(current.theta - theta);
+}
+
+
+float distance_cost(state current, state previous)
+{
+    float now = distance(x_goal,y_goal,current.x_pos, current.y_pos);
+    float prev = distance(x_goal,y_goal,previous.x_pos, previous.y_pos);
+    if((prev - now)<0.01)return 100;
+    return 1/(prev-now);
 }
 
 float velocity_cost(float vel)
@@ -115,16 +129,21 @@ vector<float> path_find(state current, vector< vector<double> > &distance)
             float head_cost = heading_cost(trajectory.back());
             float vel_cost = velocity_cost(trajectory.back().vel);
             float min_dist = obstacle_cost(trajectory, distance);
+            float dist_cost = distance_cost(trajectory.back(),current);
 
-            if(vel*vel >= 2*max_accel*min_dist)
+            if(vel*vel >= 2*max_accel*(min_dist+inflt_radi))
                 continue;
 
             if(min_dist < inflt_radi)
                 continue;
 
-            float obj_cost = 1/min_dist;
+            float obj_cost;
+            if(min_dist < cons_rad)
+                obj_cost = 1/min_dist;
+            else
+                obj_cost = 0;
 
-            float temp_cost = head_cost;// + obj_cost;
+            float temp_cost = head_cost + dist_cost + vel_cost + obj_cost;
             
             if(temp_cost<min_cost && abs(vel)>vel_reso)
             {
@@ -205,19 +224,18 @@ int main()
         if(abs(current.x_pos - x_goal) < goal_res && abs(current.y_pos - y_goal) < goal_res)break;
         vector<float> vel_ome = path_find(current,distance);
         current = motion(current, vel_ome[0], vel_ome[1]);
-        // cout<<current.y_pos<<" "<<current.x_pos<<endl;  
+        cout<<current.y_pos<<" "<<current.x_pos<<endl;  
         path.push_back(current);
         C.at<Vec3b>(current.y_pos,current.x_pos)[0]=0;
         C.at<Vec3b>(current.y_pos,current.x_pos)[1]=255;
         C.at<Vec3b>(current.y_pos,current.x_pos)[2]=0;
         imshow("win",C);
-        imshow("win1",B);
-        waitKey(2);
-        cout<<vel_ome[0]<<endl;
+        // imshow("win1",B);
+        waitKey(1);
     }
 
-    for(vector<state>::iterator it=path.begin();it!=path.end();it++)
-        cout<<it->y_pos<<" "<<it->y_pos<<endl;
+    // for(vector<state>::iterator it=path.begin();it!=path.end();it++)
+    //     cout<<it->y_pos<<" "<<it->y_pos<<endl;
 
     return 0;
 }
