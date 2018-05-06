@@ -1,5 +1,7 @@
 #include <windowparam.hpp>
-
+#include <obstacle_distance.hpp>
+#include<opencv2/opencv.hpp>
+using namespace cv;
 
 vector<float> createDynamicWindow(state currentState)
 {
@@ -38,7 +40,6 @@ float heading_cost(state current)
   return cost;
 }
 
-
 //////////////////VELOCITY COST//////////////////////
 
 float velocity_cost(float velocity)
@@ -50,14 +51,16 @@ float velocity_cost(float velocity)
 
 //////////////////OBSTACLE COST//////////////////////
 
-float obstacle_cost(vector<state> trajectory, vector<vector<double> > &distance)
+float obstacle_cost(vector<state> trajectory, vector<vector<vector<double> > > distance)
 {
   float min_dist=1e9;
+  //cout << "Andar" << endl;
   for(vector<state>::iterator it=trajectory.begin();it!=trajectory.end();it++)
   {
-    if(distance[(int)(it->y_pos)][(int)(it->x_pos)]<min_dist)
+    float dis = BFS(Point(it->x_pos,it->y_pos),distance);
+    if(dis<min_dist)
     {
-      min_dist = distance[(int)(it->y_pos)][(int)(it->x_pos)];
+      min_dist = dis;
     }
   }
   float cost = min_dist<=0?FLT_MAX:10/min_dist;
