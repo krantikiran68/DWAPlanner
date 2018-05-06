@@ -1,10 +1,11 @@
 #include<bits/stdc++.h> 
 #include<obstacle_distance.hpp>
+#include <windowparam.hpp>
 
 using namespace std;
 using namespace cv;
 
-vector<float> path_find(state x, vector<vector<double> > distance)
+vector<float> path_find(state x, vector<vector<vector<double> > > distance)
 {
     float min_cost = 1e9, best_vel = 0.1, best_ome = 0.1;
 
@@ -17,9 +18,9 @@ vector<float> path_find(state x, vector<vector<double> > distance)
             
             float head_cost = (headingWeight) * heading_cost(trajectory.back());
             float vel_cost = (velocityWeight) * velocity_cost((trajectory.back()).vel);
-            //float obj_cost = (obstacleWeight) * obstacle_cost(trajectory, distance);
+            float obj_cost = (obstacleWeight) * obstacle_cost(trajectory, distance);
 
-            //cout << head_cost << " " << vel_cost << endl;
+            //cout << "Cost" << head_cost << " " << vel_cost << " " << obj_cost << endl;
             float temp_cost = head_cost + vel_cost;
              
             if(temp_cost<min_cost)
@@ -30,7 +31,8 @@ vector<float> path_find(state x, vector<vector<double> > distance)
             }
         }
     }
-    //cout << "T" << endl;
+
+    cout << "T" << endl;
     vector<float> vel_ome(2);
     vel_ome[0] = best_vel;
     vel_ome[1] = best_ome;
@@ -62,8 +64,9 @@ int main()
     // }
     cvtColor(A,A,CV_BGR2GRAY);
 
-    vector<vector<double> > distance = BFS(A);
-    cout << distance[A.rows-1][A.cols-1] << endl;
+    vector<vector<vector<double> > > distance = search(A);
+    cout << "Done BFS" << endl;
+    //cout << distance[A.rows-1][A.cols-1] << endl;
     // Mat B(400,640,CV_8UC1,Scalar(0));
     // for(int i=0;i<A.rows;i++)
     // {
@@ -93,7 +96,7 @@ int main()
         vector<float> vel_ome = path_find(current, distance);
         current = motion(current, vel_ome[0], vel_ome[1]);
         path.push_back(current);    
-        //cout << current.x_pos << " " << current.y_pos << " " << current.vel << " " << current.omega << endl;
+        cout << current.x_pos << " " << current.y_pos << " " << current.vel << " " << current.omega << endl;
     }
     for(vector<state>::iterator it=path.begin();it!=path.end();it++)
     {
