@@ -1,4 +1,4 @@
-#include<bits/stdc++.h> 
+#include<DWA/New.hpp> 
 
 double max_speed = 1.0  ;
 double min_speed = -1.0  ;
@@ -27,8 +27,8 @@ state motion(state temp, double vel_x, double vel_y, double yaw_rate)
     curent.x_pos = temp.x_pos + (vel_x*cos(temp.yaw) - vel_y*sin(temp.yaw))*dt;
     curent.y_pos = temp.y_pos + (vel_x*sin(temp.yaw) + vel_y*cos(temp.yaw))*dt;
     curent.yaw = temp.yaw + yaw_rate*dt;
-    curent.vel_x = vel_x;
-    curent.vel_y = vel_y;
+    curent.x_vel = vel_x;
+    curent.y_vel = vel_y;
     curent.yaw_rate = yaw_rate;
 
     if(curent.yaw < -1*M_PI)curent.yaw+=2*M_PI;
@@ -38,7 +38,7 @@ state motion(state temp, double vel_x, double vel_y, double yaw_rate)
     return curent;
 }
 
-double min_dist(vector<state> trajectory, vector< vector<double> > &distance)
+double mini_dist(vector<state> trajectory, vector< vector<double> > &distance)
 {
     double min_dist=1e9;
 
@@ -88,10 +88,10 @@ vector< state > calc_trajectory (state init, double velocity, double omega)
 
 vector<double> createDynamicWindow(state currentState)
 {
-    double tempMinspeed = currentState.vel - max_accel*dt;
-    double tempMaxspeed = currentState.vel + max_accel*dt;
-    double tempMinomega = currentState.omega - max_domega*dt;
-    double tempMaxomega = currentState.omega + max_domega*dt;
+    double tempMinspeed = currentState.x_vel - max_accel*dt;
+    double tempMaxspeed = currentState.x_vel + max_accel*dt;
+    double tempMinomega = currentState.yaw - max_domega*dt;
+    double tempMaxomega = currentState.yaw + max_domega*dt;
 
     vector <double> DynamicWindow(4);
 
@@ -107,7 +107,7 @@ vector<double> path_find(state current, vector< vector<double> > &distance)
 {
     vector<double> Dw = createDynamicWindow(current);
     vector<double> vel_ome(2);
-    vel_ome[0] = -current.vel_x;
+    vel_ome[0] = -current.x_vel;
 
 
     double min_cost = 1e9;
@@ -119,8 +119,8 @@ vector<double> path_find(state current, vector< vector<double> > &distance)
             vector<state> trajectory = calc_trajectory(current, vel, ome);
 
             double head_cost = heading_cost(trajectory.back());
-            double vel_cost = velocity_cost(trajectory.back().vel_x);
-            double min_dist = min_dist(trajectory, distance);
+            double vel_cost = velocity_cost(trajectory.back().x_vel);
+            double min_dist = mini_dist(trajectory, distance);
             double dist_cost = distance_cost(trajectory.back(),current);
 
             if(vel*vel >= 2*max_accel*min_dist)

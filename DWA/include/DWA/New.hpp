@@ -3,7 +3,7 @@
 #include<nav_msgs/OccupancyGrid.h>
 #include<geometry_msgs/Twist.h>
 #include<tf/transform_datatypes.h>
-#include<tf2/Quaternion.h>
+#include<tf2/LinearMath/Quaternion.h>
 #include<bits/stdc++.h>
 
 using namespace std;
@@ -14,8 +14,9 @@ struct state
     ros::Time time;
 };
 
+double distance(double x1, double y1, double x2, double y2);
 state motion(state temp, double vel_x, double vel_y, double yaw_rate);
-double min_dist(vector<state> trajectory, vector< vector<double> > &distance);
+double mini_dist(vector<state> trajectory, vector< vector<double> > &distance);
 double heading_cost(state current);
 double distance_cost(state current, state previous);
 double velocity_cost(double vel);

@@ -17,10 +17,10 @@ extern double goal_res;
 extern double cons_rad;
 
 state latest;
-vector< vector<double> > distance;
+vector< vector<double> > dist_cost;
 bool flag=false;
 
-void velcallback(nav_msgs::Odometry::ConstPtr &vel)
+void velcallback(const nav_msgs::Odometry::ConstPtr& vel)
 {
     latest.time  = ros::Time(vel->header.stamp.sec);
 
@@ -30,16 +30,16 @@ void velcallback(nav_msgs::Odometry::ConstPtr &vel)
     latest.y_vel = vel->twist.twist.linear.y;
     latest.yaw_rate = vel->twist.twist.angular.z;
 
-    tf2::Quaternion q;
-    quaternionMsgToTF(vel->pose.pose.orientation,q);
+    tf::Quaternion q;
+    tf::quaternionMsgToTF(vel->pose.pose.orientation,q);
     latest.yaw = getYaw(q);
 
     flag = true;
 }
 
-void mapcallback(nav_msgs::OccupancyGrid::ConstPtr &map_o)
+void mapcallback(const nav_msgs::OccupancyGrid::ConstPtr& map_o)
 {
-
+    return;
 }
 
 int main(int argc,char **argv)
@@ -58,10 +58,10 @@ int main(int argc,char **argv)
             continue;
         flag = false;
         
-        if(dist(latest.x_pos,x_goal,latest.y_pos,y_goal) < goal_res)
+        if(distance(latest.x_pos,x_goal,latest.y_pos,y_goal) < goal_res)
             break;
         
-        vector<float> vel_ome = path_find(latest,distance);
+        vector<double> vel_ome = path_find(latest,dist_cost);
 
         geometry_msgs::Twist vel_fi;
         vel_fi.linear.x = vel_ome[0];
