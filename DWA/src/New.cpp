@@ -13,6 +13,7 @@ double y_goal = 19;
 double dt = 0.1;
 double goal_res = 1;
 double cons_rad = 8;
+int occ_thresh = 20;
 
 extern nav_msgs::OccupancyGrid cur_map; 
 nav_msgs::OccupancyGrid cur_map_f;
@@ -24,7 +25,6 @@ using namespace std;
 double distance(double x1, double y1, double x2, double y2)
 {
     return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-
 }
 
 state motion(state temp, double vel_x, double vel_y, double yaw_rate)
@@ -44,18 +44,50 @@ state motion(state temp, double vel_x, double vel_y, double yaw_rate)
     return curent;
 }
 
+bool is_valid(int x,int y)
+{
+    if(x<0 || y<0)return true;
+    if(x>cur_map_f.info.width || y>cur_map_f.info.height)return true;
+    if(cur_map_f.data[x*cur_map_f.info.width+y]==-1 || cur_map_f.data[x*cur_map_f.info.width+y]>=occ_thresh)
+        return true;
+}
+
 double traj_dist(state curent)
 {
-    double temp = curent.x_pos*cos(map_yaw) + cur_map_f.y_pos*sin(map_yaw);
+    double temp = curent.x_pos*cos(map_yaw) + curent.y_pos*sin(map_yaw);
     temp -= map_ori[0];
-    int x_pos /= cur_map_f.info.resolution;
+    int x_pos = temp/cur_map_f.info.resolution;
 
-    temp = -curent.x_pos*sin(map_yaw) + cur_map_f.y_pos*cos(map_yaw); 
+    temp = -curent.x_pos*sin(map_yaw) + curent.y_pos*cos(map_yaw); 
     temp -= map_ori[1];
-    int y_pos /= cur_map_f.info.resolution;
+    int y_pos = temp/cur_map_f.info.resolution;
 
-    if(x_pos<0 || y_pos<0)return 0;
-    if(x_pos>cur_map_f.info.width || y_pos>cur_map_f.info.height)return 0;
+    vector<point> visited;
+    queue<point> unvisited;
+
+    unvisited.push(point(x_pos,y_pos));
+    int dist=0;
+    while(!unvisited.empty())
+    {
+        point curr = unvisited.front();
+        unvisited.pop();
+        if(find(visited.begin(),visited.end(),curr) == visited.end())visited.push_back(curr);
+        visited.push_back(curr);
+        if(is_valid(curr.x,curr.y))return dist;
+        for(int i=curr.x-1;i<=curr.x+1;i++)
+        {
+            for(int j=curr.y-1;j<=curr.y+1;j++)
+            {
+                if(i==curr.x && j==curr.y)continue;
+                if(find(visited.begin(),visited.end(),point(i,j)) == visited.end())continue;
+                if(is_valid(i,j))return dist+1;
+                unvisited.push(point(i,j));
+            }
+        }
+        dist++;
+        if(dist>cons_rad)return cons_rad+1;
+    }
+    return dist;
 }
 
 double mini_dist(vector<state> trajectory)
@@ -65,11 +97,11 @@ double mini_dist(vector<state> trajectory)
     cur_map_f = cur_map;
 
     tf::Quaternion q;
-    tf::quaternionMsgToTF(cur_map_f.info.pose.orientation,q);
+    tf::quaternionMsgToTF(cur_map_f.info.origin.orientation,q);
     map_yaw = getYaw(q);
 
-    map_ori[0]=cur_map_f.info.pose.position.x;
-    map_ori[1]=cur_map_f.info.pose.position.y;
+    map_ori[0]=cur_map_f.info.origin.position.x;
+    map_ori[1]=cur_map_f.info.origin.position.y;
 
     for(vector<state>::iterator it=trajectory.begin();it!=trajectory.end();it++)
     {

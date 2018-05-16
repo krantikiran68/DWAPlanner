@@ -16,8 +16,10 @@ extern double dt;
 extern double goal_res;
 extern double cons_rad;
 
+nav_msgs::OccupancyGrid cur_map;
 state latest;
 bool flag=false;
+bool flag1=false;
 
 void velcallback(const nav_msgs::Odometry::ConstPtr& vel)
 {
@@ -38,7 +40,8 @@ void velcallback(const nav_msgs::Odometry::ConstPtr& vel)
 
 void mapcallback(const nav_msgs::OccupancyGrid::ConstPtr& map_o)
 {
-    return;
+    cur_map = *map_o;
+    flag1=true;
 }
 
 int main(int argc,char **argv)
@@ -53,7 +56,7 @@ int main(int argc,char **argv)
     while(ros::ok())
     {
         ros::spinOnce();
-        if(!flag)
+        if(!flag && !flag1)
             continue;
         flag = false;
         
