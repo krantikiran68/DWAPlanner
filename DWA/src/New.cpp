@@ -14,11 +14,17 @@ double dt = 0.1;
 double goal_res = 1;
 double cons_rad = 8;
 
+extern nav_msgs::OccupancyGrid cur_map; 
+nav_msgs::OccupancyGrid cur_map_f;
+double map_yaw;
+vector<double> map_ori;
+
 using namespace std;
 
 double distance(double x1, double y1, double x2, double y2)
 {
     return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+
 }
 
 state motion(state temp, double vel_x, double vel_y, double yaw_rate)
@@ -38,14 +44,37 @@ state motion(state temp, double vel_x, double vel_y, double yaw_rate)
     return curent;
 }
 
-double mini_dist(vector<state> trajectory, vector< vector<double> > &distance)
+double traj_dist(state curent)
+{
+    double temp = curent.x_pos*cos(map_yaw) + cur_map_f.y_pos*sin(map_yaw);
+    temp -= map_ori[0];
+    int x_pos /= cur_map_f.info.resolution;
+
+    temp = -curent.x_pos*sin(map_yaw) + cur_map_f.y_pos*cos(map_yaw); 
+    temp -= map_ori[1];
+    int y_pos /= cur_map_f.info.resolution;
+
+    if(x_pos<0 || y_pos<0)return 0;
+    if(x_pos>cur_map_f.info.width || y_pos>cur_map_f.info.height)return 0;
+}
+
+double mini_dist(vector<state> trajectory)
 {
     double min_dist=1e9;
 
+    cur_map_f = cur_map;
+
+    tf::Quaternion q;
+    tf::quaternionMsgToTF(cur_map_f.info.pose.orientation,q);
+    map_yaw = getYaw(q);
+
+    map_ori[0]=cur_map_f.info.pose.position.x;
+    map_ori[1]=cur_map_f.info.pose.position.y;
+
     for(vector<state>::iterator it=trajectory.begin();it!=trajectory.end();it++)
     {
-        if(distance[(int)(it->y_pos)][(int)(it->x_pos)]<min_dist)
-            min_dist = distance[(int)(it->y_pos)][(int)(it->x_pos)];
+        double temp = traj_dist(*it);
+        if(temp < min_dist)min_dist = temp; 
     }
 
     return min_dist;
@@ -103,7 +132,7 @@ vector<double> createDynamicWindow(state currentState)
     return DynamicWindow;
 }
 
-vector<double> path_find(state current, vector< vector<double> > &distance)
+vector<double> path_find(state current)
 {
     vector<double> Dw = createDynamicWindow(current);
     vector<double> vel_ome(2);
@@ -120,7 +149,7 @@ vector<double> path_find(state current, vector< vector<double> > &distance)
 
             double head_cost = heading_cost(trajectory.back());
             double vel_cost = velocity_cost(trajectory.back().x_vel);
-            double min_dist = mini_dist(trajectory, distance);
+            double min_dist = mini_dist(trajectory);
             double dist_cost = distance_cost(trajectory.back(),current);
 
             if(vel*vel >= 2*max_accel*min_dist)
