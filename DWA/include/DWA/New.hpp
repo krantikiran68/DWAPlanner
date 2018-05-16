@@ -16,7 +16,8 @@ struct state
 
 double distance(double x1, double y1, double x2, double y2);
 state motion(state temp, double vel_x, double vel_y, double yaw_rate);
-double mini_dist(vector<state> trajectory, vector< vector<double> > &distance);
+double traj_dist(state curent);
+double mini_dist(vector<state> trajectory);
 double heading_cost(state current);
 double distance_cost(state current, state previous);
 double velocity_cost(double vel);
