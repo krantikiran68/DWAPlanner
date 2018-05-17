@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="DWA" type="dwa_node" name="dwa1" output="screen">
+         <rosparam command="load" file="$(find DWA)/params/dwa_params.yaml" />
+    </node>
+</launch>

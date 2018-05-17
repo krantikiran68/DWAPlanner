@@ -1,33 +1,15 @@
-#include<DWA/New.hpp> 
-
-double max_speed = 1.0  ;
-double min_speed = -1.0  ;
-double max_omega = 40.0 * M_PI / 180.0  ;
-double max_accel = 0.3  ;
-double max_domega = 40.0 * M_PI / 180.0  ;
-double vel_reso = 0.05  ;
-double omega_reso = 0.1 * M_PI / 180.0    ;
-double predict_time = 5;
-double x_goal = 361 ;
-double y_goal = 19;
-double dt = 0.1;
-double goal_res = 1;
-double cons_rad = 8;
-int occ_thresh = 20;
-
-extern nav_msgs::OccupancyGrid cur_map; 
-nav_msgs::OccupancyGrid cur_map_f;
-double map_yaw;
-vector<double> map_ori;
+#include<DWA/dwa_func.hpp> 
 
 using namespace std;
+
+extern nav_msgs::OccupancyGrid cur_map; 
 
 double distance(double x1, double y1, double x2, double y2)
 {
     return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
 }
 
-state motion(state temp, double vel_x, double vel_y, double yaw_rate)
+state dwa::motion(state temp, double vel_x, double vel_y, double yaw_rate)
 {
     state curent;
     curent.x_pos = temp.x_pos + (vel_x*cos(temp.yaw) - vel_y*sin(temp.yaw))*dt;
@@ -44,15 +26,15 @@ state motion(state temp, double vel_x, double vel_y, double yaw_rate)
     return curent;
 }
 
-bool is_valid(int x,int y)
+bool dwa::is_valid(int x,int y)
 {
     if(x<0 || y<0)return true;
     if(x>cur_map_f.info.width || y>cur_map_f.info.height)return true;
-    if(cur_map_f.data[x*cur_map_f.info.width+y]==-1 || cur_map_f.data[x*cur_map_f.info.width+y]>=occ_thresh)
+    if(cur_map_f.data[x*cur_map_f.info.width+y]==-1 || cur_map_f.data[x*cur_map_f.info.width+y]>=free_thresh)
         return true;
 }
 
-double traj_dist(state curent)
+double dwa::traj_dist(state curent)
 {
     double temp = curent.x_pos*cos(map_yaw) + curent.y_pos*sin(map_yaw);
     temp -= map_ori[0];
@@ -90,7 +72,7 @@ double traj_dist(state curent)
     return dist;
 }
 
-double mini_dist(vector<state> trajectory)
+double dwa::mini_dist(vector<state> trajectory)
 {
     double min_dist=1e9;
 
@@ -112,14 +94,14 @@ double mini_dist(vector<state> trajectory)
     return min_dist;
 }
 
-double heading_cost(state current)
+double dwa::heading_cost(state current)
 {
     double theta = atan2(y_goal - current.y_pos,x_goal - current.x_pos);
     return abs(current.yaw - theta);
 }
 
 
-double distance_cost(state current, state previous)
+double dwa::distance_cost(state current, state previous)
 {
     double now = distance(x_goal,y_goal,current.x_pos, current.y_pos);
     double prev = distance(x_goal,y_goal,previous.x_pos, previous.y_pos);
@@ -127,18 +109,18 @@ double distance_cost(state current, state previous)
     return 1/(prev-now);
 }
 
-double velocity_cost(double vel)
+double dwa::velocity_cost(double vel)
 {
-    return (abs(max_speed) - abs(vel))/abs(max_speed);
+    return (abs(max_speed_f) - abs(vel))/abs(max_speed_f);
 }
 
-vector< state > calc_trajectory (state init, double velocity, double omega)
+vector< state > dwa::calc_trajectory (state init, double velocity, double omega)
 {
     state temp=init;
     vector< state > trajectory;
     double time = 0;
     trajectory.push_back(init);
-    while(time < predict_time)
+    while(time < cycle_time)
     {
         temp = motion(temp, velocity, 0, omega);
         trajectory.push_back(temp);
@@ -147,35 +129,39 @@ vector< state > calc_trajectory (state init, double velocity, double omega)
     return trajectory;
 }
 
-vector<double> createDynamicWindow(state currentState)
+vector<double> dwa::createDynamicWindow(state currentState)
 {
     double tempMinspeed = currentState.x_vel - max_accel*dt;
     double tempMaxspeed = currentState.x_vel + max_accel*dt;
-    double tempMinomega = currentState.yaw - max_domega*dt;
-    double tempMaxomega = currentState.yaw + max_domega*dt;
+    double tempMinomega = currentState.yaw - max_yaw_acc*dt;
+    double tempMaxomega = currentState.yaw + max_yaw_acc*dt;
 
     vector <double> DynamicWindow(4);
 
-    DynamicWindow[0] = max(tempMinspeed,min_speed);
-    DynamicWindow[1] = min(tempMaxspeed,max_speed);
-    DynamicWindow[2] = max(tempMinomega,-1*max_omega);
-    DynamicWindow[3] = min(tempMaxomega,max_omega);
+    DynamicWindow[0] = max(tempMinspeed,max_speed_b);
+    DynamicWindow[1] = min(tempMaxspeed,max_speed_f);
+    DynamicWindow[2] = max(tempMinomega,-1*max_yaw_rate);
+    DynamicWindow[3] = min(tempMaxomega,max_yaw_rate);
 
     return DynamicWindow;
 }
 
-vector<double> path_find(state current)
+vector<double> dwa::path_find(state current,ros::NodeHandle n)
 {
     vector<double> Dw = createDynamicWindow(current);
     vector<double> vel_ome(2);
     vel_ome[0] = -current.x_vel;
 
+    if (!(n.getParam("cons_rad", cons_rad)))
+        cons_rad=2.5/cur_map_f.info.resolution;
+    else
+        cons_rad/=cur_map_f.info.resolution;
 
     double min_cost = 1e9;
 
     for(double vel=Dw[0];vel <= Dw[1];vel+=vel_reso)
     {
-        for(double ome=Dw[2];ome <= Dw[3];ome+= omega_reso)
+        for(double ome=Dw[2];ome <= Dw[3];ome+= yaw_reso)
         {
             vector<state> trajectory = calc_trajectory(current, vel, ome);
 

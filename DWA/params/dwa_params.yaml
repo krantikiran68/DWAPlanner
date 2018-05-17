@@ -1,0 +1,12 @@
+max_speed_f: 1.0 # The maximum forward speed
+max_speed_b: -0.5 # The maximum backwards speed
+max_yaw_rate: 0.6 # The maximum yaw rate
+max_accel: 0.3 # The maximum acceleration of the bot
+max_yaw_acc: 0.3 # The maximum angular acceleration of the bot
+vel_reso: 0.05 # The resolution of the velocity that should be considered
+yaw_reso: 0.002 # The resoultion of yaw_rate
+cycle_time: 6 # The time for one cycle.....The look ahead time
+dt: 0.2 # Step time that should be considered for trajectry generation 
+cons_rad: 3 # Outisde of this radius of the obstacles, all  paths are of equal cost
+goal_res: 0.1 # The error that is allowed in reaching the goal
+free_thresh: 19 # The occupancy grid probability below which the cell can be considered not occupied
