@@ -44,6 +44,7 @@ class dwa
         double cycle_time;
         double dt;
         double cons_rad;
+        double min_obj_dist;
         int free_thresh;
         nav_msgs::OccupancyGrid cur_map_f;
         double map_yaw;

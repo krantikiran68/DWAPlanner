@@ -156,6 +156,11 @@ vector<double> dwa::path_find(state current,ros::NodeHandle n)
         cons_rad=2.5/cur_map_f.info.resolution;
     else
         cons_rad/=cur_map_f.info.resolution;
+    
+    if (!(n.getParam("min_obj_dist", min_obj_dist)))
+        min_obj_dist=0.5/cur_map_f.info.resolution;
+    else
+        min_obj_dist/=cur_map_f.info.resolution;
 
     double min_cost = 1e9;
 
@@ -170,10 +175,10 @@ vector<double> dwa::path_find(state current,ros::NodeHandle n)
             double min_dist = mini_dist(trajectory);
             double dist_cost = distance_cost(trajectory.back(),current);
 
-            if(vel*vel >= 2*max_accel*min_dist)
+            if(vel*vel >= 2*max_accel*(min_dist+min_obj_dist))
                 continue;
 
-            if(!min_dist)
+            if(min_dist - min_obj_dist < 0)
                 continue;
 
             double obj_cost;
